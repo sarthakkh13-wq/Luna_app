@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Luna">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0a12">
+<meta name="description" content="Luna — your safe, smart period companion. Track cycles, chat with Luna, and find comfort.">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<title>Luna 🌙</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM
+   ============================================================ */
+:root {
+  --bg: #0d0a12;
+  --surface: #16111f;
+  --surface2: #1e1729;
+  --surface3: #251c33;
+  --border: rgba(255,200,220,0.10);
+  --border2: rgba(255,200,220,0.18);
+  --pink: #f472b6;
+  --rose: #fb7185;
+  --lavender: #c084fc;
+  --peach: #fdba74;
+  --mint: #6ee7b7;
+  --sky: #7dd3fc;
+  --text: #f8f0fb;
+  --text2: #d4c8e8;
+  --muted: #9589a8;
+  --glow: rgba(244,114,182,0.25);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --nav-h: 68px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html { height: 100%; overscroll-behavior: none; }
+
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ambient glow */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 45% at 15% 8%, rgba(192,132,252,0.14) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 55% at 85% 85%, rgba(244,114,182,0.11) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 60% 45%, rgba(251,113,133,0.07) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+#app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100%; max-width: 480px; margin: 0 auto;
+}
+
+/* ============================================================
+   STATUS BAR SAFE AREA
+   ============================================================ */
+.status-bar {
+  height: calc(var(--safe-top) + 8px);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 20px 4px;
+  flex-shrink: 0;
+}
+
+.logo {
+  font-family: 'Fraunces', serif;
+  font-size: 24px; font-style: italic; font-weight: 600;
+  background: linear-gradient(130deg, #f9a8d4, #c084fc);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+.hdr-btn {
+  width: 36px; height: 36px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; transition: all 0.2s;
+}
+.hdr-btn:active { transform: scale(0.92); background: var(--surface3); }
+
+.day-pill {
+  background: rgba(244,114,182,0.12);
+  border: 1px solid rgba(244,114,182,0.25);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 12px; font-weight: 500; color: var(--pink);
+}
+
+/* ============================================================
+   SCREENS
+   ============================================================ */
+.screens {
+  flex: 1; overflow: hidden; position: relative;
+}
+
+.screen {
+  position: absolute; inset: 0;
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 0 calc(var(--nav-h) + var(--safe-bottom) + 16px);
+  opacity: 0; transform: translateY(12px);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  pointer-events: none;
+  scrollbar-width: none;
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active {
+  opacity: 1; transform: translateY(0);
+  pointer-events: all;
+}
+
+.pad { padding-left: 20px; padding-right: 20px; }
+
+/* ============================================================
+   BOTTOM NAV
+   ============================================================ */
+.nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: rgba(13,10,18,0.92);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bottom);
+  z-index: 100;
+}
+
+.nav-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 10px 0 8px; cursor: pointer;
+  transition: all 0.2s; position: relative;
+  background: none; border: none;
+  color: var(--muted); font-family: 'DM Sans', sans-serif;
+}
+
+.nav-item .ni { font-size: 22px; margin-bottom: 2px; transition: transform 0.2s; }
+.nav-item .nl { font-size: 10px; font-weight: 500; transition: color 0.2s; }
+
+.nav-item.active .nl { color: var(--pink); }
+.nav-item.active .ni { transform: scale(1.12); }
+
+.nav-item.active::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 32px; height: 2px;
+  background: linear-gradient(90deg, var(--pink), var(--lavender));
+  border-radius: 0 0 4px 4px;
+}
+
+.nav-item:active .ni { transform: scale(0.9); }
+
+/* ============================================================
+   SHARED COMPONENTS
+   ============================================================ */
+.section-label {
+  font-family: 'Fraunces', serif;
+  font-size: 19px; font-style: italic; font-weight: 400;
+  color: var(--text); margin-bottom: 12px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 22px; overflow: hidden;
+}
+
+.pill-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 8px 16px;
+  font-family: 'DM Sans', sans-serif; font-size: 13px;
+  color: var(--text2); cursor: pointer; transition: all 0.18s;
+}
+.pill-btn:active { transform: scale(0.95); }
+.pill-btn.active { background: rgba(244,114,182,0.15); border-color: var(--pink); color: var(--pink); }
+
+.btn-primary {
+  width: 100%; padding: 16px;
+  background: linear-gradient(135deg, var(--pink), var(--lavender));
+  border: none; border-radius: 18px;
+  color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600; cursor: pointer;
+  transition: all 0.2s; letter-spacing: 0.01em;
+}
+.btn-primary:active { transform: scale(0.97); opacity: 0.9; }
+
+.btn-ghost {
+  width: 100%; padding: 14px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 18px; color: var(--text2);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; cursor: pointer; transition: all 0.2s;
+}
+.btn-ghost:active { background: var(--surface3); }
+
+/* Privacy badge */
+.privacy-bar {
+  background: rgba(110,231,183,0.07);
+  border: 1px solid rgba(110,231,183,0.15);
+  border-radius: 14px; padding: 10px 14px;
+  font-size: 11.5px; color: var(--mint);
+  display: flex; align-items: center; gap: 8px;
+  line-height: 1.4;
+}
+
+/* ============================================================
+   ── HOME SCREEN ──
+   ============================================================ */
+.moon-hero {
+  background: linear-gradient(145deg, rgba(192,132,252,0.16), rgba(244,114,182,0.10), rgba(251,113,133,0.07));
+  border: 1px solid rgba(244,114,182,0.12);
+  border-radius: 28px; padding: 28px 24px 24px;
+  margin: 8px 20px 14px;
+  text-align: center; position: relative; overflow: hidden;
+}
+
+.moon-hero::before {
+  content: '';
+  position: absolute; top: -60%; right: -25%;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, rgba(192,132,252,0.22), transparent 68%);
+  border-radius: 50%; pointer-events: none;
+}
+
+.moon-glyph {
+  font-size: 64px; line-height: 1;
+  display: block; margin-bottom: 10px;
+  animation: lunaFloat 5s ease-in-out infinite;
+  filter: drop-shadow(0 0 18px rgba(192,132,252,0.5));
+}
+
+@keyframes lunaFloat {
+  0%,100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-10px) rotate(3deg); }
+}
+
+.hero-day {
+  font-family: 'Fraunces', serif;
+  font-size: 38px; font-weight: 600; line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.hero-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+
+.ring-container { display: flex; justify-content: center; margin-bottom: 16px; }
+
+.ring-svg { transform: rotate(-90deg); overflow: visible; }
+.ring-bg { fill: none; stroke: rgba(255,255,255,0.07); stroke-width: 5; }
+.ring-prog {
+  fill: none; stroke-width: 5; stroke-linecap: round;
+  stroke: url(#rg); transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+}
+
+.phase-tag {
+  display: inline-block;
+  background: rgba(244,114,182,0.13);
+  border: 1px solid rgba(244,114,182,0.28);
+  border-radius: 16px; padding: 7px 20px;
+  font-size: 13px; font-weight: 600; color: var(--pink);
+  letter-spacing: 0.01em;
+}
+
+/* Mood bar */
+.mood-scroll {
+  display: flex; gap: 8px;
+  overflow-x: auto; padding: 2px 20px 6px;
+  margin-bottom: 14px; scrollbar-width: none;
+}
+.mood-scroll::-webkit-scrollbar { display: none; }
+
+.mood-chip {
+  flex-shrink: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 22px; padding: 9px 15px;
+  font-size: 13px; cursor: pointer;
+  transition: all 0.18s; white-space: nowrap;
+  color: var(--text2); font-family: 'DM Sans', sans-serif;
+}
+.mood-chip.sel { background: rgba(192,132,252,0.15); border-color: var(--lavender); color: var(--lavender); }
+.mood-chip:active { transform: scale(0.94); }
+
+/* Symptom grid */
+.sym-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 8px;
+  margin-bottom: 14px;
+}
+
+.sym-btn {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 13px 6px 10px;
+  text-align: center; cursor: pointer;
+  transition: all 0.18s; color: var(--text2);
+  font-family: 'DM Sans', sans-serif; font-size: 11.5px;
+  line-height: 1.2;
+}
+.sym-btn .si { font-size: 22px; display: block; margin-bottom: 5px; }
+.sym-btn.sel { background: rgba(244,114,182,0.12); border-color: var(--pink); color: var(--pink); }
+.sym-btn:active { transform: scale(0.95); }
+
+/* Tips */
+.tip-row {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 16px 18px;
+  display: flex; gap: 14px; align-items: flex-start;
+  margin-bottom: 10px;
+}
+.tip-ico { font-size: 28px; flex-shrink: 0; margin-top: 1px; }
+.tip-ttl { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.tip-txt { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+
+/* ============================================================
+   ── COMPANION SCREEN ──
+   ============================================================ */
+.luna-profile {
+  text-align: center; padding: 16px 20px 10px;
+}
+
+.luna-orb {
+  width: 76px; height: 76px; border-radius: 50%;
+  background: linear-gradient(135deg, rgba(192,132,252,0.35), rgba(244,114,182,0.3));
+  border: 2px solid rgba(244,114,182,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 38px; margin: 0 auto 10px;
+  box-shadow: 0 0 32px rgba(192,132,252,0.25);
+  animation: orbPulse 3s ease-in-out infinite;
+}
+
+@keyframes orbPulse {
+  0%,100% { box-shadow: 0 0 20px rgba(192,132,252,0.2); }
+  50% { box-shadow: 0 0 40px rgba(192,132,252,0.4); }
+}
+
+.luna-name {
+  font-family: 'Fraunces', serif; font-size: 22px;
+  font-style: italic; margin-bottom: 3px;
+}
+.luna-status {
+  font-size: 12px; color: var(--muted);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.online-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--mint);
+  box-shadow: 0 0 6px rgba(110,231,183,0.6);
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.chat-outer {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 310px); min-height: 240px;
+  margin: 0 20px;
+}
+
+.chat-msgs {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 8px 0 4px;
+  scrollbar-width: none;
+}
+.chat-msgs::-webkit-scrollbar { display: none; }
+
+.msg {
+  max-width: 82%; padding: 12px 15px;
+  font-size: 14px; line-height: 1.55;
+  animation: msgSlide 0.28s ease;
+}
+@keyframes msgSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.msg.luna {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px 20px 20px 5px; align-self: flex-start; color: var(--text);
+}
+.msg.user {
+  background: linear-gradient(135deg, rgba(244,114,182,0.22), rgba(192,132,252,0.22));
+  border: 1px solid rgba(244,114,182,0.25);
+  border-radius: 20px 20px 5px 20px; align-self: flex-end; color: var(--text);
+}
+
+.typing-wrap {
+  display: none; align-items: center; gap: 5px;
+  padding: 12px 15px; margin-bottom: 2px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 20px 20px 20px 5px; width: fit-content;
+}
+.typing-wrap.show { display: flex; }
+.tdot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--muted); animation: tdot 1.3s infinite ease-in-out;
+}
+.tdot:nth-child(2) { animation-delay: 0.17s; }
+.tdot:nth-child(3) { animation-delay: 0.34s; }
+@keyframes tdot { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+.qr-row {
+  display: flex; gap: 7px; flex-wrap: wrap;
+  padding: 8px 0 4px;
+}
+.qr {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 16px; padding: 7px 13px;
+  font-size: 12px; color: var(--muted); cursor: pointer;
+  transition: all 0.18s; font-family: 'DM Sans', sans-serif;
+}
+.qr:hover { border-color: var(--pink); color: var(--pink); }
+.qr:active { transform: scale(0.94); }
+
+.chat-input-bar {
+  display: flex; gap: 8px; align-items: flex-end;
+  padding: 10px 0 2px; border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+.chat-textarea {
+  flex: 1; background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 22px; padding: 11px 16px;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none; resize: none;
+  max-height: 100px; overflow-y: auto;
+  transition: border-color 0.2s; line-height: 1.4;
+}
+.chat-textarea::placeholder { color: var(--muted); }
+.chat-textarea:focus { border-color: rgba(244,114,182,0.45); }
+
+.send-btn {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pink), var(--lavender));
+  border: none; color: #fff; font-size: 17px;
+  cursor: pointer; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 0 4px 14px rgba(244,114,182,0.3);
+}
+.send-btn:active { transform: scale(0.9); }
+
+.mem-bar {
+  background: rgba(110,231,183,0.07);
+  border: 1px solid rgba(110,231,183,0.16);
+  border-radius: 12px; padding: 8px 12px;
+  font-size: 11.5px; color: var(--mint);
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 10px;
+}
+
+/* ============================================================
+   ── GAME SCREEN ──
+   ============================================================ */
+.game-header {
+  text-align: center; padding: 14px 20px 10px;
+}
+.game-title {
+  font-family: 'Fraunces', serif; font-size: 28px; font-style: italic;
+  background: linear-gradient(130deg, var(--pink), var(--peach));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  margin-bottom: 4px;
+}
+.game-sub { font-size: 13px; color: var(--muted); }
+
+.game-tabs {
+  display: flex; gap: 8px; padding: 0 20px; margin-bottom: 14px;
+  overflow-x: auto; scrollbar-width: none;
+}
+.game-tabs::-webkit-scrollbar { display: none; }
+.gtab {
+  flex-shrink: 0;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 18px; padding: 8px 16px;
+  font-size: 13px; font-weight: 500; color: var(--muted);
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.gtab.active { background: rgba(244,114,182,0.13); border-color: var(--pink); color: var(--pink); }
+.gtab:active { transform: scale(0.95); }
+
+.game-panel { display: none; }
+.game-panel.active { display: block; }
+
+/* Bubble Pop */
+.bubble-arena {
+  position: relative; width: calc(100% - 40px);
+  height: 260px; margin: 0 20px 14px;
+  background: linear-gradient(160deg, rgba(244,114,182,0.05), rgba(192,132,252,0.06));
+  border: 1px solid var(--border); border-radius: 22px; overflow: hidden;
+  cursor: pointer; touch-action: manipulation;
+}
+
+.bubble {
+  position: absolute; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; cursor: pointer; touch-action: manipulation;
+  animation: rise linear both;
+  will-change: bottom, opacity;
+  border: 1px solid rgba(255,255,255,0.12);
+  user-select: none; -webkit-user-select: none;
+}
+@keyframes rise {
+  from { bottom: -70px; opacity: 0.9; }
+  to   { bottom: 105%;  opacity: 0.2; }
+}
+
+.bubble-pop {
+  position: absolute; border-radius: 50%;
+  pointer-events: none; z-index: 10;
+  animation: popOut 0.5s ease forwards;
+}
+@keyframes popOut {
+  0%   { transform: scale(0.2); opacity: 1; }
+  60%  { opacity: 0.6; }
+  100% { transform: scale(2.8); opacity: 0; }
+}
+
+.bb-score-row {
+  display: flex; justify-content: space-between; align-items: center;
+  margin: 0 20px 12px;
+}
+.bb-score-box { text-align: center; }
+.bb-score-num {
+  font-family: 'Fraunces', serif; font-size: 32px;
+  background: linear-gradient(135deg, var(--pink), var(--lavender));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.bb-score-lbl { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.arena-msg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+  color: var(--muted); font-size: 14px; text-align: center;
+  pointer-events: none;
+}
+.arena-msg .big { font-size: 32px; }
+
+/* Breathing */
+.breathe-wrap {
+  text-align: center; padding: 10px 20px 20px;
+}
+.breathe-ring {
+  width: 140px; height: 140px; border-radius: 50%;
+  margin: 0 auto 16px;
+  background: radial-gradient(circle, rgba(192,132,252,0.35), rgba(244,114,182,0.18));
+  border: 2px solid rgba(192,132,252,0.4);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 500; color: var(--lavender);
+  transition: transform 4s ease-in-out, background 3s ease;
+  will-change: transform;
+  box-shadow: 0 0 30px rgba(192,132,252,0.2);
+}
+.breathe-ring.inhale {
+  transform: scale(1.48);
+  background: radial-gradient(circle, rgba(192,132,252,0.55), rgba(244,114,182,0.3));
+  box-shadow: 0 0 50px rgba(192,132,252,0.4);
+}
+.breathe-ring.exhale {
+  transform: scale(0.82);
+  background: radial-gradient(circle, rgba(192,132,252,0.2), rgba(244,114,182,0.1));
+}
+.breathe-phase { font-size: 15px; color: var(--muted); margin-bottom: 6px; }
+.breathe-count { font-family: 'Fraunces', serif; font-size: 24px; color: var(--lavender); margin-bottom: 14px; }
+
+/* Affirmations */
+.affirmation-card {
+  background: linear-gradient(145deg, rgba(192,132,252,0.12), rgba(244,114,182,0.08));
+  border: 1px solid rgba(244,114,182,0.18);
+  border-radius: 22px; padding: 28px 22px;
+  margin: 0 20px 16px; text-align: center;
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 18px; line-height: 1.65; color: var(--text);
+  cursor: pointer; min-height: 120px;
+  display: flex; align-items: center; justify-content: center;
+  transition: opacity 0.22s;
+  -webkit-tap-highlight-color: transparent;
+}
+.aff-hint { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+
+/* ============================================================
+   ── TRACKER SCREEN ──
+   ============================================================ */
+.stats-trio {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px;
+  margin: 8px 20px 14px;
+}
+.stat-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 15px 10px; text-align: center;
+}
+.stat-n { font-family: 'Fraunces', serif; font-size: 26px; font-weight: 600; line-height: 1; }
+.stat-n.pink { color: var(--pink); }
+.stat-n.lav { color: var(--lavender); }
+.stat-n.mint { color: var(--mint); }
+.stat-u { font-size: 10.5px; color: var(--muted); margin-top: 4px; line-height: 1.3; }
+
+/* Cycle setup */
+.setup-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 22px; padding: 18px 18px 14px;
+  margin: 0 20px 14px;
+}
+.setup-ttl { font-size: 14px; font-weight: 600; margin-bottom: 14px; color: var(--text2); }
+.setup-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fld { display: flex; flex-direction: column; gap: 5px; }
+.fld.full { grid-column: 1/-1; }
+.fld label { font-size: 11px; color: var(--muted); font-weight: 500; }
+.fld input {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 10px 12px;
+  color: var(--text); font-family: 'DM Sans', sans-serif;
+  font-size: 14px; outline: none;
+  -webkit-appearance: none; appearance: none;
+  transition: border-color 0.2s;
+}
+.fld input:focus { border-color: rgba(244,114,182,0.45); }
+
+/* Calendar */
+.cal-nav-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 0 20px 12px;
+}
+.cal-arr {
+  width: 34px; height: 34px; border-radius: 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  color: var(--text2); font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.cal-arr:active { background: var(--surface3); transform: scale(0.92); }
+.cal-month { font-family: 'Fraunces', serif; font-size: 19px; font-style: italic; }
+
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin: 0 20px 12px; }
+.cal-dh { text-align: center; font-size: 10.5px; color: var(--muted); font-weight: 600; padding: 3px 0 5px; }
+
+.cal-d {
+  aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  border-radius: 50%; font-size: 12.5px; cursor: pointer;
+  transition: all 0.15s; position: relative;
+}
+.cal-d:active { transform: scale(0.88); }
+.cal-d.today { border: 1.5px solid var(--pink); color: var(--pink); font-weight: 600; }
+.cal-d.period { background: rgba(251,113,133,0.28); color: var(--rose); font-weight: 500; }
+.cal-d.fertile { background: rgba(110,231,183,0.17); color: var(--mint); }
+.cal-d.ovulation { background: rgba(253,186,116,0.22); color: var(--peach); font-weight: 600; }
+.cal-d.empty { cursor: default; }
+
+.cal-legend {
+  display: flex; gap: 12px; flex-wrap: wrap;
+  margin: 0 20px 14px;
+}
+.leg-item { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted); }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* ============================================================
+   ── CARE SCREEN ──
+   ============================================================ */
+.care-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 22px; overflow: hidden;
+  margin: 0 20px 10px; cursor: pointer;
+  transition: border-color 0.2s;
+}
+.care-card:active { opacity: 0.9; }
+.care-card.open { border-color: rgba(244,114,182,0.28); }
+
+.care-hdr {
+  display: flex; align-items: center; gap: 14px; padding: 16px 18px;
+}
+.care-ico { font-size: 28px; flex-shrink: 0; }
+.care-ttl { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+.care-sub { font-size: 12px; color: var(--muted); }
+.care-arr {
+  margin-left: auto; color: var(--muted); font-size: 16px;
+  transition: transform 0.25s; flex-shrink: 0;
+}
+.care-card.open .care-arr { transform: rotate(180deg); }
+
+.care-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(.4,0,.2,1), padding 0.3s;
+  padding: 0 18px; font-size: 13px; color: var(--muted); line-height: 1.75;
+}
+.care-card.open .care-body {
+  max-height: 500px; padding: 0 18px 18px;
+}
+
+/* ============================================================
+   INSTALL BANNER
+   ============================================================ */
+#install-banner {
+  position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 10px); left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  width: calc(100% - 40px); max-width: 440px;
+  background: var(--surface2); border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 20px; padding: 16px 18px;
+  z-index: 200; transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  display: flex; align-items: center; gap: 14px;
+}
+#install-banner.show { transform: translateX(-50%) translateY(0); }
+.ib-icon { font-size: 32px; flex-shrink: 0; }
+.ib-text { flex: 1; }
+.ib-title { font-weight: 600; font-size: 14px; margin-bottom: 3px; }
+.ib-sub { font-size: 12px; color: var(--muted); }
+.ib-btns { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+.ib-install {
+  background: linear-gradient(135deg, var(--pink), var(--lavender));
+  border: none; border-radius: 12px; padding: 8px 14px;
+  color: #fff; font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  white-space: nowrap;
+}
+.ib-close {
+  background: none; border: none; font-size: 13px;
+  color: var(--muted); cursor: pointer; text-align: center;
+}
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+#toast {
+  position: fixed; bottom: calc(var(--nav-h) + var(--safe-bottom) + 14px);
+  left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(22,17,31,0.96); border: 1px solid rgba(244,114,182,0.3);
+  border-radius: 22px; padding: 11px 22px;
+  font-size: 13px; color: var(--pink); white-space: nowrap;
+  opacity: 0; transition: all 0.28s; pointer-events: none; z-index: 300;
+  backdrop-filter: blur(14px);
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ============================================================
+   ONBOARDING OVERLAY
+   ============================================================ */
+#onboarding {
+  position: fixed; inset: 0; z-index: 500;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 32px;
+  transition: opacity 0.4s;
+}
+#onboarding.hide { opacity: 0; pointer-events: none; }
+
+.ob-moon { font-size: 80px; margin-bottom: 24px; animation: lunaFloat 5s ease-in-out infinite; }
+.ob-title { font-family: 'Fraunces', serif; font-size: 32px; font-style: italic; font-weight: 600; text-align: center; margin-bottom: 10px; }
+.ob-title span { background: linear-gradient(130deg, var(--pink), var(--lavender)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.ob-sub { text-align: center; font-size: 15px; color: var(--muted); line-height: 1.65; margin-bottom: 32px; }
+.ob-features { width: 100%; margin-bottom: 32px; display: flex; flex-direction: column; gap: 12px; }
+.ob-feat { display: flex; align-items: center; gap: 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px 16px; }
+.ob-feat-ico { font-size: 24px; }
+.ob-feat-txt { font-size: 13px; color: var(--text2); line-height: 1.4; }
+.ob-feat-txt b { color: var(--text); }
+.ob-privacy { font-size: 11.5px; color: var(--muted); text-align: center; margin-bottom: 24px; opacity: 0.8; }
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.mt8 { margin-top: 8px; }
+.mt14 { margin-top: 14px; }
+.mx20 { margin-left: 20px; margin-right: 20px; }
+.mb14 { margin-bottom: 14px; }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 4px 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     ONBOARDING (first launch)
+     ═══════════════════════════════════════════ -->
+<div id="onboarding">
+  <div class="ob-moon">🌙</div>
+  <div class="ob-title">Welcome to <span>Luna</span></div>
+  <p class="ob-sub">Your gentle, private companion for every day of your cycle. Here when it hurts. Here when you need to talk.</p>
+  <div class="ob-features">
+    <div class="ob-feat"><div class="ob-feat-ico">🩸</div><div class="ob-feat-txt"><b>Cycle & symptom tracker</b> — log moods, symptoms & get phase tips</div></div>
+    <div class="ob-feat"><div class="ob-feat-ico">💬</div><div class="ob-feat-txt"><b>Luna AI companion</b> — remembers everything, judges nothing</div></div>
+    <div class="ob-feat"><div class="ob-feat-ico">🎮</div><div class="ob-feat-txt"><b>Comfort corner</b> — bubble pop, breathing & affirmations</div></div>
+    <div class="ob-feat"><div class="ob-feat-ico">🔒</div><div class="ob-feat-txt"><b>100% private</b> — all data stays on your device, always</div></div>
+  </div>
+  <p class="ob-privacy">🔒 Luna never sends your data anywhere. No account. No ads. No tracking.</p>
+  <button class="btn-primary" style="width:100%;max-width:320px;" onclick="finishOnboarding()">Start with Luna 🌸</button>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     MAIN APP
+     ═══════════════════════════════════════════ -->
+<div id="app">
+  <div class="status-bar"></div>
+
+  <div class="header">
+    <div class="logo">Luna 🌙</div>
+    <div class="header-right">
+      <div class="day-pill" id="day-pill">Day 1</div>
+      <div class="hdr-btn" onclick="showToastMsg('🔒 All data is stored locally on your device only.')">🔒</div>
+    </div>
+  </div>
+
+  <div class="screens">
+
+    <!-- ══════════ HOME ══════════ -->
+    <div class="screen active" id="s-home">
+      <div class="moon-hero">
+        <span class="moon-glyph" id="moon-glyph">🌑</span>
+        <div class="hero-day" id="hero-day">Day 1</div>
+        <div class="hero-sub" id="hero-sub">Your cycle just began</div>
+        <div class="ring-container">
+          <svg class="ring-svg" width="88" height="88" viewBox="0 0 88 88">
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f472b6"/>
+                <stop offset="100%" stop-color="#c084fc"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="44" cy="44" r="37"/>
+            <circle class="ring-prog" id="ring-prog" cx="44" cy="44" r="37"
+              stroke-dasharray="232.5" stroke-dashoffset="232.5"/>
+          </svg>
+        </div>
+        <div class="phase-tag" id="phase-tag">Menstrual Phase 🌹</div>
+      </div>
+
+      <div class="pad mb14">
+        <div class="privacy-bar">
+          🔒 <span>Your data never leaves this device. Fully private, always.</span>
+        </div>
+      </div>
+
+      <div class="pad mb14">
+        <div class="section-label">How are you feeling? 💭</div>
+      </div>
+      <div class="mood-scroll">
+        <button class="mood-chip" onclick="toggleMood(this)">😴 Exhausted</button>
+        <button class="mood-chip" onclick="toggleMood(this)">😊 Okay-ish</button>
+        <button class="mood-chip" onclick="toggleMood(this)">😢 Emotional</button>
+        <button class="mood-chip" onclick="toggleMood(this)">😤 Irritable</button>
+        <button class="mood-chip" onclick="toggleMood(this)">😰 Anxious</button>
+        <button class="mood-chip" onclick="toggleMood(this)">🥰 Cozy</button>
+        <button class="mood-chip" onclick="toggleMood(this)">💪 Powerful</button>
+        <button class="mood-chip" onclick="toggleMood(this)">🤒 Unwell</button>
+      </div>
+
+      <div class="pad mb14 mt8">
+        <div class="section-label">Log symptoms</div>
+        <div class="sym-grid">
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🔥</span>Cramps</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🤕</span>Headache</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">😴</span>Fatigue</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🤢</span>Nausea</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🫁</span>Bloating</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">💧</span>Heavy flow</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🌡️</span>Hot flashes</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">🦵</span>Back pain</button>
+          <button class="sym-btn" onclick="toggleSym(this)"><span class="si">💤</span>Insomnia</button>
+        </div>
+        <button class="btn-primary" onclick="saveLog()">✨ Save Today's Log</button>
+      </div>
+
+      <div class="pad">
+        <div class="section-label">Tips for today 🌿</div>
+        <div id="tips-area"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ COMPANION ══════════ -->
+    <div class="screen" id="s-companion">
+      <div class="luna-profile">
+        <div class="luna-orb">🌙</div>
+        <div class="luna-name">Luna</div>
+        <div class="luna-status"><div class="online-dot"></div>always here for you 💜</div>
+      </div>
+
+      <div class="pad">
+        <div class="mem-bar">🧠 <span>Luna remembers your logs & feelings — stored only on your device.</span></div>
+        <div class="chat-outer">
+          <div class="chat-msgs" id="chat-msgs">
+            <div class="msg luna">Hey love 🌙 I'm Luna, your period companion. I'm here to listen, comfort, and never judge. How are you feeling today?</div>
+          </div>
+          <div class="typing-wrap" id="typing-wrap">
+            <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+          </div>
+          <div class="qr-row" id="qr-row">
+            <button class="qr" onclick="qr('I\'m in so much pain 😭')">In pain 😭</button>
+            <button class="qr" onclick="qr('I feel really emotional today')">Emotional</button>
+            <button class="qr" onclick="qr('I just need to vent')">Just venting</button>
+            <button class="qr" onclick="qr('What helps with cramps?')">Cramp tips</button>
+            <button class="qr" onclick="qr('I\'m exhausted and can\'t sleep')">Can't sleep</button>
+          </div>
+          <div class="chat-input-bar">
+            <textarea class="chat-textarea" id="chat-in" placeholder="Tell Luna anything…" rows="1"
+              oninput="autoGrow(this)" onkeydown="chatKey(event)"></textarea>
+            <button class="send-btn" onclick="sendChat()">➤</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ GAME ══════════ -->
+    <div class="screen" id="s-game">
+      <div class="game-header">
+        <div class="game-title">Comfort Corner 🌸</div>
+        <div class="game-sub">little games & rituals to soothe your mind</div>
+      </div>
+
+      <div class="game-tabs">
+        <button class="gtab active" onclick="switchGameTab('bubbles',this)">🫧 Bubble Pop</button>
+        <button class="gtab" onclick="switchGameTab('breathe',this)">🌬️ Breathe</button>
+        <button class="gtab" onclick="switchGameTab('affirmations',this)">💜 Affirmations</button>
+      </div>
+
+      <!-- Bubble Pop -->
+      <div class="game-panel active" id="gp-bubbles">
+        <div class="bb-score-row">
+          <div class="bb-score-box">
+            <div class="bb-score-num" id="bb-score">0</div>
+            <div class="bb-score-lbl">bubbles popped</div>
+          </div>
+          <div class="bb-score-box">
+            <div class="bb-score-num" id="bb-time">30</div>
+            <div class="bb-score-lbl">seconds left</div>
+          </div>
+          <div class="bb-score-box">
+            <div class="bb-score-num" id="bb-best">—</div>
+            <div class="bb-score-lbl">your best</div>
+          </div>
+        </div>
+        <div class="bubble-arena" id="arena">
+          <div class="arena-msg" id="arena-msg">
+            <div class="big">🫧</div>
+            <div>Tap bubbles to pop away stress!</div>
+          </div>
+        </div>
+        <div class="mx20">
+          <button class="btn-primary" id="bb-btn" onclick="bbStart()">🫧 Start Bubble Pop</button>
+        </div>
+      </div>
+
+      <!-- Breathe -->
+      <div class="game-panel" id="gp-breathe">
+        <div class="breathe-wrap">
+          <div class="breathe-ring" id="br-ring">Tap Start</div>
+          <div class="breathe-phase" id="br-phase">Box breathing — 4 counts each</div>
+          <div class="breathe-count" id="br-count"></div>
+          <button class="btn-primary" style="max-width:260px;margin:0 auto;display:block;" onclick="brStart()">Start Breathing</button>
+        </div>
+      </div>
+
+      <!-- Affirmations -->
+      <div class="game-panel" id="gp-affirmations">
+        <div class="affirmation-card" id="aff-card" onclick="nextAff()">
+          "Your body is doing something remarkable. Rest is productive."
+        </div>
+        <p class="aff-hint">tap the card for a new affirmation 💜</p>
+        <div class="mx20">
+          <button class="btn-ghost" onclick="nextAff()">🌸 Next Affirmation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════ TRACKER ══════════ -->
+    <div class="screen" id="s-tracker">
+      <div class="stats-trio">
+        <div class="stat-box">
+          <div class="stat-n pink" id="st-cycle">28</div>
+          <div class="stat-u">avg cycle days</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-n lav" id="st-period">5</div>
+          <div class="stat-u">period days</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-n mint" id="st-next">—</div>
+          <div class="stat-u">days to next</div>
+        </div>
+      </div>
+
+      <div class="setup-card">
+        <div class="setup-ttl">⚙️ Your Cycle Settings</div>
+        <div class="setup-fields">
+          <div class="fld full">
+            <label>Last period start date</label>
+            <input type="date" id="inp-date" onchange="cycleChanged()">
+          </div>
+          <div class="fld">
+            <label>Cycle length (days)</label>
+            <input type="number" id="inp-cycle" value="28" min="20" max="45" onchange="cycleChanged()">
+          </div>
+          <div class="fld">
+            <label>Period length (days)</label>
+            <input type="number" id="inp-plen" value="5" min="2" max="10" onchange="cycleChanged()">
+          </div>
+        </div>
+      </div>
+
+      <div class="cal-nav-row">
+        <button class="cal-arr" onclick="calShift(-1)">‹</button>
+        <div class="cal-month" id="cal-lbl">March 2026</div>
+        <button class="cal-arr" onclick="calShift(1)">›</button>
+      </div>
+
+      <div class="cal-grid" id="cal-grid"></div>
+
+      <div class="cal-legend">
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(251,113,133,0.6)"></div>Period</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(110,231,183,0.5)"></div>Fertile</div>
+        <div class="leg-item"><div class="leg-dot" style="background:rgba(253,186,116,0.5)"></div>Ovulation</div>
+        <div class="leg-item"><div class="leg-dot" style="background:transparent;border:1.5px solid var(--pink);"></div>Today</div>
+      </div>
+    </div>
+
+    <!-- ══════════ CARE ══════════ -->
+    <div class="screen" id="s-care">
+      <div class="pad" style="padding-top:12px;padding-bottom:8px;">
+        <div class="section-label">Self-Care Kit 🫶</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.55;">Everything you need to feel a little better, right here.</p>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">🔥</div><div><div class="care-ttl">Cramp Relief</div><div class="care-sub">heat, movement & medicine tips</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>Heat therapy:</b> A heating pad on your lower belly for 15–20 min relaxes uterine muscles — as effective as ibuprofen for many people.<br><br><b>Child's pose:</b> Kneel, stretch arms forward, breathe deeply, hold 30 seconds. Releases lower back tension.<br><br><b>Cat-cow:</b> On all fours, alternate arching and rounding your spine — 10 slow reps.<br><br><b>Ibuprofen tip:</b> Works best if taken at the very first sign of cramps — before the pain peaks.<br><br><b>Warm drinks:</b> Ginger tea, chamomile, or warm lemon water reduce inflammation and bloating.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">🍫</div><div><div class="care-ttl">Food & Cravings</div><div class="care-sub">what your body actually needs</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>Dark chocolate:</b> Magnesium in 70%+ cacao genuinely reduces cramps and lifts mood. Enjoy it guilt-free.<br><br><b>Iron-rich foods:</b> Spinach, lentils, pumpkin seeds, red meat — replenish what you lose during your period.<br><br><b>Avoid:</b> Salty snacks (worsen bloating), caffeine (can amplify cramps), alcohol.<br><br><b>Eat:</b> Bananas (potassium), salmon (omega-3 is anti-inflammatory), oats (stabilize blood sugar).<br><br><b>Craving carbs?</b> Serotonin is dipping — complex carbs like oats or sweet potato are great choices.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">🧠</div><div><div class="care-ttl">Mood & Mental Health</div><div class="care-sub">PMS, emotions & coping</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>It's hormonal, not you:</b> Progesterone and estrogen both drop sharply before your period. That causes real anxiety, tearfulness, and irritability. You're not broken.<br><br><b>5-4-3-2-1 grounding:</b> Name 5 things you see, 4 you can touch, 3 you hear, 2 you smell, 1 you taste. Brings you back to the present.<br><br><b>Rest is allowed:</b> Canceling plans during your period is self-care, not failure.<br><br><b>Crying is good:</b> Emotional release has a measurable physiological calming effect.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">💤</div><div><div class="care-ttl">Sleep During Your Period</div><div class="care-sub">rest better, feel better</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>Best sleep position:</b> Fetal (curled on your side) reduces cramping pressure on your uterus.<br><br><b>Magnesium before bed:</b> A supplement or Epsom salt bath can ease nighttime cramps significantly.<br><br><b>Cool your room:</b> 65–68°F / 18–20°C improves sleep quality — especially when you tend to run warm.<br><br><b>Lavender:</b> Aromatherapy (pillow spray or diffuser) is clinically shown to reduce period-related anxiety.<br><br><b>Screens:</b> Blue light worsens hormonal disruption. Try to put your phone down 45–60 min before sleep.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">🧘</div><div><div class="care-ttl">Gentle Movement</div><div class="care-sub">when exercise actually helps</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>Day 1–2:</b> Rest or very light yoga only. Listen to your body — don't push through heavy pain.<br><br><b>Day 3–4:</b> Light walking or stretching. Movement releases endorphins that naturally reduce pain.<br><br><b>Avoid:</b> Intense HIIT or heavy lifting on high-flow days — it can worsen cramping.<br><br><b>Swimming:</b> Water pressure can temporarily ease flow and cramps. Even a short swim helps.<br><br><b>Yin yoga:</b> Poses held 3–5 min (like supported bridge or legs up the wall) are deeply restorative.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">🩸</div><div><div class="care-ttl">Period Product Guide</div><div class="care-sub">pads, tampons, cups & more</div></div><div class="care-arr">›</div></div>
+        <div class="care-body"><b>Pads:</b> Best for overnight, beginners, or postpartum. Change every 4–6 hours.<br><br><b>Tampons:</b> Great for active days. Change every 4–8 hours max — TSS risk increases beyond that.<br><br><b>Menstrual cups:</b> Eco-friendly, holds 3× more than a tampon, lasts up to 12 hours. Small learning curve but life-changing.<br><br><b>Menstrual discs:</b> Can be worn during sex. Very flat, comfortable for all-day wear.<br><br><b>Period underwear:</b> Sustainable, washable backup or perfect for light flow days.</div>
+      </div>
+
+      <div class="care-card" onclick="toggleCare(this)">
+        <div class="care-hdr"><div class="care-ico">☎️</div><div><div class="care-ttl">When to See a Doctor</div><div class="care-sub">symptoms that deserve attention</div></div><div class="care-arr">›</div></div>
+        <div class="care-body">See a healthcare provider if you experience:<br><br>• Cramps so severe they stop you from daily activities<br>• Bleeding so heavy you soak a pad/tampon every hour for 2+ hours<br>• Periods lasting longer than 7 days<br>• Irregular or missed periods (when not due to pregnancy)<br>• Severe PMS or PMDD that significantly impacts your mental health<br>• Pain during sex or between periods<br><br>These can be signs of conditions like endometriosis, PCOS, or fibroids — all very treatable when caught early. You deserve care. 💜</div>
+      </div>
+
+      <div style="height:20px;"></div>
+    </div>
+
+  </div><!-- /screens -->
+
+  <!-- Bottom Nav -->
+  <nav class="nav">
+    <button class="nav-item active" onclick="goScreen('home',this)">
+      <div class="ni">🌸</div><div class="nl">Today</div>
+    </button>
+    <button class="nav-item" onclick="goScreen('companion',this)">
+      <div class="ni">💬</div><div class="nl">Luna</div>
+    </button>
+    <button class="nav-item" onclick="goScreen('game',this)">
+      <div class="ni">🎮</div><div class="nl">Play</div>
+    </button>
+    <button class="nav-item" onclick="goScreen('tracker',this)">
+      <div class="ni">📅</div><div class="nl">Cycle</div>
+    </button>
+    <button class="nav-item" onclick="goScreen('care',this)">
+      <div class="ni">🫶</div><div class="nl">Care</div>
+    </button>
+  </nav>
+</div>
+
+<!-- Install Banner -->
+<div id="install-banner">
+  <div class="ib-icon">📱</div>
+  <div class="ib-text">
+    <div class="ib-title">Add Luna to your home screen</div>
+    <div class="ib-sub">Works offline · Feels like a real app</div>
+  </div>
+  <div class="ib-btns">
+    <button class="ib-install" id="ib-install-btn">Install</button>
+    <button class="ib-close" onclick="dismissInstall()">Later</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT
+     ═══════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ─── STATE ───────────────────────────────────
+const K = 'luna_v2';
+function load() { try { return JSON.parse(localStorage.getItem(K)) || {}; } catch { return {}; } }
+function save(d) { try { localStorage.setItem(K, JSON.stringify({ ...load(), ...d })); } catch {} }
+
+let S = load();
+let chatHistory = S.chatHistory || [];
+let logs = S.logs || {};
+let cycle = S.cycle || { lastPeriod: null, len: 28, plen: 5 };
+let bbBest = parseInt(localStorage.getItem('luna_bb_best') || '0');
+
+// ─── ONBOARDING ───────────────────────────────
+function finishOnboarding() {
+  save({ onboarded: true });
+  document.getElementById('onboarding').classList.add('hide');
+  setTimeout(() => { document.getElementById('onboarding').style.display = 'none'; }, 450);
+}
+
+// ─── NAVIGATION ──────────────────────────────
+const screens = { home:'s-home', companion:'s-companion', game:'s-game', tracker:'s-tracker', care:'s-care' };
+
+function goScreen(id, btn) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById(screens[id]).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'tracker') renderCal();
+  if (id === 'home') renderTips();
+  // Haptic feedback on supported devices
+  if (navigator.vibrate) navigator.vibrate(4);
+}
+
+// ─── CYCLE LOGIC ─────────────────────────────
+const phases = [
+  { name:'Menstrual Phase 🌹', moon:'🌑', desc:'Your body is shedding. Rest, warmth, and gentleness are your best friends right now.' },
+  { name:'Follicular Phase 🌱', moon:'🌒', desc:'Energy is quietly building. A good time for creativity and new intentions.' },
+  { name:'Ovulation Phase ✨', moon:'🌕', desc:'Peak energy and confidence! You might feel naturally more social and radiant.' },
+  { name:'Luteal Phase 🍂',    moon:'🌗', desc:'Slow down and turn inward. PMS may visit — be extra kind to yourself.' },
+];
+
+function cycleDay() {
+  if (!cycle.lastPeriod) return 1;
+  const diff = Math.floor((Date.now() - new Date(cycle.lastPeriod)) / 86400000) + 1;
+  return ((diff - 1) % cycle.len) + 1;
+}
+
+function phaseOf(day) {
+  const { len, plen } = cycle;
+  const ovDay = Math.round(len * 0.5);
+  if (day <= plen) return 0;
+  if (day <= Math.round(len * 0.36)) return 1;
+  if (day <= ovDay) return 2;
+  return 3;
+}
+
+function refreshHome() {
+  const day = cycleDay();
+  const ph = phases[phaseOf(day)];
+  const dLeft = cycle.len - day;
+
+  document.getElementById('moon-glyph').textContent = ph.moon;
+  document.getElementById('hero-day').textContent = 'Day ' + day;
+  document.getElementById('hero-sub').textContent = dLeft > 0 ? `Next period in ~${dLeft} days` : 'Period expected soon';
+  document.getElementById('phase-tag').textContent = ph.name;
+  document.getElementById('day-pill').textContent = 'Day ' + day;
+
+  const circ = 232.5;
+  const offset = circ - (day / cycle.len) * circ;
+  const r = document.getElementById('ring-prog');
+  r.style.strokeDashoffset = circ;
+  setTimeout(() => { r.style.strokeDashoffset = offset; }, 80);
+}
+
+// ─── TIPS ────────────────────────────────────
+const tipsData = [
+  // Menstrual
+  [
+    { i:'🔥', t:'Heat therapy', b:'A heating pad on your lower belly for 15–20 min can ease cramps as well as ibuprofen. Use it early.' },
+    { i:'💧', t:'Warm drinks', b:'Ginger tea, chamomile, or warm lemon water reduce inflammation and help with bloating.' },
+    { i:'🛌', t:'Rest without guilt', b:'Your body is shedding its lining. Resting today is not laziness — it\'s what your body literally needs.' },
+  ],
+  // Follicular
+  [
+    { i:'🌱', t:'Energy is rising', b:'Estrogen is climbing. Channel this into creative projects, new habits, or things you\'ve been putting off.' },
+    { i:'🥗', t:'Eat light & fresh', b:'Digestion is smoother now. Leafy greens, fruits, and light proteins make you feel amazing.' },
+    { i:'🏃', t:'Move more', b:'Your energy peaks in the follicular phase — perfect for a run, a class, or any exercise you enjoy.' },
+  ],
+  // Ovulation
+  [
+    { i:'✨', t:'Peak confidence', b:'Estrogen and testosterone both peak near ovulation. You\'re naturally more persuasive, social, and glowing.' },
+    { i:'🎯', t:'Sharp focus', b:'Your brain literally processes information faster during ovulation. Great day for important decisions or conversations.' },
+    { i:'🫶', t:'Connect', b:'Your natural warmth is highest right now. Reach out, make plans, have the conversations you\'ve been avoiding.' },
+  ],
+  // Luteal
+  [
+    { i:'🍫', t:'Dark chocolate is valid', b:'Magnesium in 70%+ cacao reduces PMS mood swings. Enjoy it mindfully — it\'s medicine.' },
+    { i:'😴', t:'Sleep extra', b:'Progesterone makes you naturally sleepier. Honor that — 8–9 hours is ideal right now.' },
+    { i:'🧘', t:'Go gentle', b:'This is a time for reflection, not striving. Yin yoga and journaling beat HIIT during the luteal phase.' },
+  ],
+];
+
+function renderTips() {
+  const ph = phaseOf(cycleDay());
+  document.getElementById('tips-area').innerHTML = tipsData[ph].map(t =>
+    `<div class="tip-row"><div class="tip-ico">${t.i}</div><div><div class="tip-ttl">${t.t}</div><div class="tip-txt">${t.b}</div></div></div>`
+  ).join('');
+}
+
+// ─── SYMPTOM & MOOD LOG ──────────────────────
+function toggleMood(btn) {
+  document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+function toggleSym(btn) { btn.classList.toggle('sel'); }
+
+function saveLog() {
+  const today = new Date().toISOString().split('T')[0];
+  const mood = document.querySelector('.mood-chip.sel')?.textContent.trim() || null;
+  const syms = [...document.querySelectorAll('.sym-btn.sel')].map(b => b.textContent.trim());
+  logs[today] = { mood, syms, day: cycleDay(), phase: phaseOf(cycleDay()) };
+  save({ logs });
+  showToastMsg('✨ Logged! Luna remembers this 💜');
+  document.querySelectorAll('.sym-btn').forEach(b => b.classList.remove('sel'));
+  document.querySelectorAll('.mood-chip').forEach(b => b.classList.remove('sel'));
+}
+
+// ─── COMPANION AI ────────────────────────────
+const lunaBank = {
+  pain: [
+    "Oh love 💜 I'm so sorry you're hurting right now. That pain is so real and valid. Have you tried a heating pad on your lower belly? It can work as well as ibuprofen for a lot of people. Please rest as much as you can — you don't owe anyone your energy today.",
+    "Cramps are the actual worst and you don't have to push through them. Child's pose — on your knees, arms stretched forward — for 30 seconds can release so much tension. Also warm ginger tea. I'm here with you 💕",
+    "You're not being dramatic. Period pain is real pain — doctors have compared it to the intensity of a heart attack. Have you taken anything? Ibuprofen works best if you take it right as cramping starts, before the peak. Be gentle with yourself today.",
+  ],
+  emotional: [
+    "Feeling emotional right now is completely biochemical — estrogen and progesterone both drop sharply, which literally changes how your brain processes feelings. You're not 'too sensitive'. You're experiencing a real hormonal shift and your feelings are completely valid. 💜",
+    "It's okay to cry. It's okay to feel everything bigger than usual right now. You don't have to explain yourself or hold it together. I'm here — what's on your mind?",
+    "The days before and during your period can feel so heavy emotionally. You might feel like things are hopeless, but those are your hormones talking, not reality. In a few days you'll likely feel very different. I believe in you. 🌙",
+  ],
+  cramps: [
+    "For cramps, here's what actually works:\n\n🔥 Heat pad on your lower belly\n💊 Ibuprofen at the very first sign\n🧘 Child's pose or knee-to-chest stretch\n🫖 Ginger or chamomile tea\n🫸 Gentle circular belly massage\n\nWhich would you like to try?",
+    "Cramp relief that works: heat therapy is your best friend, then gentle yoga (especially hip openers), staying hydrated with warm drinks, and magnesium found in dark chocolate and nuts. Avoid caffeine and salty foods — they make it worse.",
+  ],
+  tired: [
+    "Of course you're exhausted 💜 Your body is literally doing intense hormonal work right now. The drop in progesterone causes genuine, real fatigue — it's not laziness, it's biology. Please rest without guilt.",
+    "Period fatigue is real and it's not in your head. You're also losing iron through your flow, which makes you more tired. Eat some iron-rich foods (spinach, lentils, red meat) and be extra gentle with your energy today.",
+  ],
+  sleep: [
+    "Sleep can be so hard during your period 😔 Try sleeping in the fetal position — curled on your side — it reduces uterine pressure and cramping. A cooler room (around 18–20°C) also helps a lot. If cramps are waking you, ibuprofen before bed can help.",
+    "For better period sleep: magnesium supplement or an Epsom salt bath before bed works really well. Lavender pillow spray is also genuinely helpful for reducing anxiety. And try to avoid screens for at least 30 min before sleep — I know that's hard but it really makes a difference.",
+  ],
+  talk: [
+    "I'm all ears 💜 Tell me whatever is on your mind. I'm not going anywhere.",
+    "I'm here and I'm listening. What do you want to talk about?",
+    "You've got my full attention. What's going on? 🌸",
+  ],
+  default: [
+    "I hear you. 💜 Tell me more — what's happening?",
+    "That makes complete sense. You're allowed to feel exactly what you're feeling right now. 🌙",
+    "I'm here with you. What would feel most helpful right now — venting, some advice, or just company?",
+    "Thank you for trusting me with that. How long have you been feeling this way?",
+    "Your feelings are completely valid. This is a hard time, and you don't have to have it all together. 💕",
+    "Sometimes the most radical act is just being honest about how you feel. I'm glad you're talking to me. 🌙",
+  ],
+};
+
+function getLunaReply(msg) {
+  const m = msg.toLowerCase();
+  if (/(so much pain|really hurt|kills me|intense cramp)/.test(m)) return pick(lunaBank.pain);
+  if (/cramp/.test(m)) return pick(lunaBank.cramps);
+  if (/(emotional|cry|sad|tear|weep|sobbing)/.test(m)) return pick(lunaBank.emotional);
+  if (/(tired|exhaust|fatigue|no energy|drained)/.test(m)) return pick(lunaBank.tired);
+  if (/(sleep|insomnia|can't sleep|awake)/.test(m)) return pick(lunaBank.sleep);
+  if (/(talk|listen|vent|just need)/.test(m)) return pick(lunaBank.talk);
+
+  // context-aware: reference today's log
+  const today = new Date().toISOString().split('T')[0];
+  const log = logs[today];
+  if (log?.syms?.length && Math.random() > 0.55) {
+    const sym = log.syms[0].replace(/^[^\w]*/, '').toLowerCase().split('\n')[0].trim();
+    return `I remember you logged ${sym} today 💜 How are you feeling with that now? ${pick(lunaBank.default)}`;
+  }
+
+  return pick(lunaBank.default);
+}
+
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function addMsg(text, role) {
+  const msgs = document.getElementById('chat-msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.textContent = text;
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChat() {
+  const ta = document.getElementById('chat-in');
+  const msg = ta.value.trim();
+  if (!msg) return;
+  ta.value = ''; ta.style.height = '';
+  addMsg(msg, 'user');
+  chatHistory.push({ r: 'user', t: msg });
+  document.getElementById('qr-row').style.display = 'none';
+
+  const tw = document.getElementById('typing-wrap');
+  tw.classList.add('show');
+  const msgs = document.getElementById('chat-msgs');
+  msgs.scrollTop = msgs.scrollHeight;
+
+  setTimeout(() => {
+    tw.classList.remove('show');
+    const reply = getLunaReply(msg);
+    addMsg(reply, 'luna');
+    chatHistory.push({ r: 'luna', t: reply });
+    if (chatHistory.length > 80) chatHistory = chatHistory.slice(-60);
+    save({ chatHistory });
+    if (navigator.vibrate) navigator.vibrate([4, 50, 4]);
+  }, 1100 + Math.random() * 900);
+}
+
+function qr(msg) {
+  document.getElementById('chat-in').value = msg;
+  sendChat();
+}
+
+function chatKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function restoreChat() {
+  const msgs = document.getElementById('chat-msgs');
+  if (chatHistory.length) {
+    msgs.innerHTML = '';
+    chatHistory.slice(-14).forEach(m => addMsg(m.t, m.r));
+  }
+}
+
+// ─── BUBBLE POP GAME ─────────────────────────
+let bbRunning = false, bbScore = 0, bbTime = 30;
+let bbTimerID = null, bbSpawnID = null;
+
+const bbEmoji = ['🌸','💕','🫧','✨','🌙','💜','🌺','⭐','🌷','💆','🦋','🍓'];
+const bbColors = [
+  'rgba(244,114,182,0.22)', 'rgba(192,132,252,0.22)',
+  'rgba(251,113,133,0.22)', 'rgba(253,186,116,0.18)',
+  'rgba(110,231,183,0.18)',
+];
+
+function bbStart() {
+  if (bbRunning) return;
+  bbRunning = true; bbScore = 0; bbTime = 30;
+  upBBUI();
+  document.getElementById('arena-msg').style.display = 'none';
+  document.getElementById('bb-btn').textContent = '🫧 Popping…';
+  document.getElementById('bb-btn').disabled = true;
+  document.getElementById('bb-best').textContent = bbBest || '—';
+
+  const arena = document.getElementById('arena');
+  arena.querySelectorAll('.bubble').forEach(b => b.remove());
+
+  bbSpawnID = setInterval(() => {
+    spawnBubble();
+    if (Math.random() > 0.4) spawnBubble();
+  }, 550);
+
+  bbTimerID = setInterval(() => {
+    bbTime--;
+    document.getElementById('bb-time').textContent = bbTime;
+    if (bbTime <= 0) bbEnd();
+  }, 1000);
+}
+
+function spawnBubble() {
+  const arena = document.getElementById('arena');
+  const aw = arena.clientWidth, ah = arena.clientHeight;
+  const size = 46 + Math.random() * 26;
+  const left = Math.random() * (aw - size - 8);
+  const dur = 3.2 + Math.random() * 2.8;
+  const b = document.createElement('div');
+  b.className = 'bubble';
+  b.style.cssText = `width:${size}px;height:${size}px;left:${left}px;background:${bbColors[Math.floor(Math.random()*bbColors.length)]};animation-duration:${dur}s;`;
+  b.textContent = bbEmoji[Math.floor(Math.random() * bbEmoji.length)];
+  b.addEventListener('touchstart', (e) => { e.preventDefault(); popBubble(b, e.touches[0]); }, { passive: false });
+  b.addEventListener('click', (e) => popBubble(b, e));
+  arena.appendChild(b);
+  setTimeout(() => { if (b.parentNode) b.remove(); }, dur * 1000);
+}
+
+function popBubble(b, e) {
+  if (!bbRunning || !b.parentNode) return;
+  if (navigator.vibrate) navigator.vibrate(8);
+  bbScore++;
+  upBBUI();
+
+  const arena = document.getElementById('arena');
+  const rect = arena.getBoundingClientRect();
+  const bRect = b.getBoundingClientRect();
+  const pop = document.createElement('div');
+  pop.className = 'bubble-pop';
+  pop.style.cssText = `left:${bRect.left - rect.left}px;top:${bRect.top - rect.top}px;width:${bRect.width}px;height:${bRect.height}px;background:rgba(244,114,182,0.45);`;
+  arena.appendChild(pop);
+  setTimeout(() => pop.remove(), 500);
+  b.remove();
+}
+
+function upBBUI() {
+  document.getElementById('bb-score').textContent = bbScore;
+  document.getElementById('bb-time').textContent = bbTime;
+}
+
+function bbEnd() {
+  clearInterval(bbTimerID); clearInterval(bbSpawnID);
+  bbRunning = false;
+  document.getElementById('arena').querySelectorAll('.bubble').forEach(b => b.remove());
+
+  if (bbScore > bbBest) {
+    bbBest = bbScore;
+    localStorage.setItem('luna_bb_best', bbBest);
+    showToastMsg(`🏆 New best: ${bbBest} bubbles!`);
+  }
+  document.getElementById('bb-best').textContent = bbBest || '—';
+
+  const msg = bbScore >= 25 ? `🌟 ${bbScore} bubbles!! You crushed it!` :
+              bbScore >= 12 ? `💜 ${bbScore} bubbles! Feeling lighter?` :
+              `🫧 ${bbScore} bubbles. A little better?`;
+  document.getElementById('arena-msg').style.display = 'flex';
+  document.getElementById('arena-msg').innerHTML = `<div class="big">🎉</div><div>${msg}</div>`;
+  document.getElementById('bb-btn').textContent = '🫧 Play Again';
+  document.getElementById('bb-btn').disabled = false;
+  document.getElementById('bb-time').textContent = '0';
+}
+
+// ─── BREATHING ───────────────────────────────
+let brRunning = false, brStep = 0, brCycles = 0;
+// Box breathing: inhale 4, hold 4, exhale 4, hold 4
+const brSeq = [
+  { label:'Breathe in…', cls:'inhale', dur:4 },
+  { label:'Hold…',       cls:'',       dur:4 },
+  { label:'Breathe out…',cls:'exhale', dur:4 },
+  { label:'Hold…',       cls:'',       dur:4 },
+];
+
+function brStart() {
+  if (brRunning) return;
+  brRunning = true; brStep = 0; brCycles = 0;
+  brTick();
+}
+
+function brTick() {
+  if (!brRunning) return;
+  const s = brSeq[brStep % 4];
+  const ring = document.getElementById('br-ring');
+  const phase = document.getElementById('br-phase');
+  const count = document.getElementById('br-count');
+
+  ring.className = 'breathe-ring ' + s.cls;
+  ring.textContent = s.label;
+  phase.textContent = s.label;
+
+  let c = s.dur;
+  count.textContent = c;
+  const ticker = setInterval(() => { c--; count.textContent = c <= 0 ? '' : c; }, 1000);
+
+  setTimeout(() => {
+    clearInterval(ticker);
+    brStep++;
+    if (brStep >= 16) {
+      brRunning = false;
+      ring.className = 'breathe-ring';
+      ring.textContent = 'Done 💜';
+      phase.textContent = 'Beautiful. You got this.';
+      count.textContent = '';
+      showToastMsg('🌬️ Great job! Feel a little better?');
+    } else {
+      brTick();
+    }
+  }, s.dur * 1000);
+}
+
+// ─── AFFIRMATIONS ────────────────────────────
+const affs = [
+  '"Your body is doing something remarkable. Rest is productive."',
+  '"You are allowed to take up space, feel everything, and ask for help."',
+  '"Being gentle with yourself right now is the bravest thing you can do."',
+  '"Your pain is real. Your need for rest is real. You are seen. 💜"',
+  '"This phase is temporary. You will feel like yourself again."',
+  '"You don\'t have to be okay right now. That\'s what Luna is here for."',
+  '"Your cycle is not an inconvenience — it\'s your body\'s wisdom."',
+  '"Softness is not weakness. Rest is not giving up."',
+  '"Every month your body shows up. That\'s remarkable."',
+  '"You deserve warmth, comfort, and kindness — especially from yourself."',
+  '"You are more than what you produce. Rest exists for a reason."',
+  '"The world can wait. You come first today."',
+];
+let affIdx = 0;
+
+function nextAff() {
+  affIdx = (affIdx + 1) % affs.length;
+  const card = document.getElementById('aff-card');
+  card.style.opacity = '0';
+  setTimeout(() => { card.textContent = affs[affIdx]; card.style.opacity = '1'; }, 200);
+  card.style.transition = 'opacity 0.2s';
+  if (navigator.vibrate) navigator.vibrate(6);
+}
+
+// ─── GAME TABS ───────────────────────────────
+function switchGameTab(id, btn) {
+  document.querySelectorAll('.game-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.gtab').forEach(b => b.classList.remove('active'));
+  document.getElementById('gp-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ─── CALENDAR ────────────────────────────────
+let calY = new Date().getFullYear(), calM = new Date().getMonth();
+
+function calShift(d) { calM += d; if (calM < 0) { calM = 11; calY--; } if (calM > 11) { calM = 0; calY++; } renderCal(); }
+
+function dayType(date) {
+  if (!cycle.lastPeriod) return null;
+  const lp = new Date(cycle.lastPeriod);
+  let diff = Math.floor((date - lp) / 86400000);
+  if (diff < 0) diff = ((diff % cycle.len) + cycle.len) % cycle.len;
+  const dInC = (diff % cycle.len) + 1;
+  if (dInC <= cycle.plen) return 'period';
+  const ov = Math.round(cycle.len * 0.5);
+  if (dInC === ov) return 'ovulation';
+  if (dInC >= ov - 3 && dInC <= ov + 1) return 'fertile';
+  return null;
+}
+
+function renderCal() {
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-lbl').textContent = MONTHS[calM] + ' ' + calY;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const fd = new Date(calY, calM, 1).getDay();
+  const dim = new Date(calY, calM + 1, 0).getDate();
+  let h = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<div class="cal-dh">${d}</div>`).join('');
+  for (let i = 0; i < fd; i++) h += '<div class="cal-d empty"></div>';
+  for (let d = 1; d <= dim; d++) {
+    const date = new Date(calY, calM, d);
+    const isToday = date.getTime() === today.getTime();
+    const type = dayType(date);
+    let cls = 'cal-d';
+    if (isToday) cls += ' today';
+    if (type) cls += ' ' + type;
+    h += `<div class="${cls}">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = h;
+
+  // Update stats
+  document.getElementById('st-cycle').textContent = cycle.len;
+  document.getElementById('st-period').textContent = cycle.plen;
+  if (cycle.lastPeriod) {
+    const day = cycleDay();
+    const next = cycle.len - day;
+    document.getElementById('st-next').textContent = next >= 0 ? next : '~' + (cycle.len + next);
+  }
+}
+
+function cycleChanged() {
+  cycle = {
+    lastPeriod: document.getElementById('inp-date').value,
+    len: parseInt(document.getElementById('inp-cycle').value) || 28,
+    plen: parseInt(document.getElementById('inp-plen').value) || 5,
+  };
+  save({ cycle });
+  refreshHome();
+  renderTips();
+  renderCal();
+  showToastMsg('Cycle updated 📅');
+}
+
+// ─── CARE CARDS ──────────────────────────────
+function toggleCare(card) {
+  card.classList.toggle('open');
+  if (navigator.vibrate) navigator.vibrate(4);
+}
+
+// ─── TOAST ───────────────────────────────────
+let toastTimer;
+function showToastMsg(msg) {
+  clearTimeout(toastTimer);
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ─── PWA INSTALL ─────────────────────────────
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!localStorage.getItem('luna_install_dismissed')) {
+    setTimeout(() => document.getElementById('install-banner').classList.add('show'), 2500);
+  }
+});
+
+document.getElementById('ib-install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) {
+    // iOS instructions
+    showToastMsg('Tap Share → "Add to Home Screen" in Safari 📱');
+    dismissInstall();
+    return;
+  }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') showToastMsg('🌙 Luna installed! Find her on your home screen.');
+  deferredPrompt = null;
+  dismissInstall();
+});
+
+function dismissInstall() {
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('luna_install_dismissed', '1');
+}
+
+window.addEventListener('appinstalled', () => showToastMsg('Luna is now on your home screen! 🌙'));
+
+// ─── SERVICE WORKER ──────────────────────────
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+
+// ─── INIT ────────────────────────────────────
+window.addEventListener('load', () => {
+  // Hide onboarding if already onboarded
+  if (S.onboarded) finishOnboarding();
+
+  // Restore cycle inputs
+  if (cycle.lastPeriod) document.getElementById('inp-date').value = cycle.lastPeriod;
+  document.getElementById('inp-cycle').value = cycle.len;
+  document.getElementById('inp-plen').value = cycle.plen;
+
+  // Set default date if none
+  if (!cycle.lastPeriod) {
+    document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+  }
+
+  refreshHome();
+  renderTips();
+  restoreChat();
+  renderCal();
+
+  // Check URL params for deep link shortcuts
+  const p = new URLSearchParams(location.search).get('screen');
+  if (p && screens[p]) {
+    const navBtns = document.querySelectorAll('.nav-item');
+    const idx = ['home','companion','game','tracker','care'].indexOf(p);
+    if (idx >= 0) goScreen(p, navBtns[idx]);
+  }
+});
+
+// Prevent pull-to-refresh on mobile
+document.addEventListener('touchmove', (e) => {
+  if (e.touches.length > 1) e.preventDefault();
+}, { passive: false });
+</script>
+</body>
+</html>

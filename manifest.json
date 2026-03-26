@@ -1,0 +1,41 @@
+{
+  "name": "Luna — Period Companion",
+  "short_name": "Luna 🌙",
+  "description": "Your safe, smart, and comforting period companion app.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0a12",
+  "theme_color": "#f472b6",
+  "orientation": "portrait",
+  "categories": ["health", "lifestyle", "medical"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Log Today",
+      "short_name": "Log",
+      "description": "Quickly log your symptoms",
+      "url": "/?screen=home",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Chat with Luna",
+      "short_name": "Chat",
+      "description": "Talk to your companion",
+      "url": "/?screen=companion",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
